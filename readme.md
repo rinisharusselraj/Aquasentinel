@@ -1,93 +1,74 @@
-# 🚻 Smart Restroom Water Leakage & Occupancy Detection (ESP8266)
+# 🚻 Smart Washroom Monitoring & Water Leak Detection System (ESP8266)
 
 ## 📌 Project Overview
-This project is an IoT-based Smart Restroom Monitoring System built using ESP8266 (NodeMCU).
+This project is an **IoT-based Smart Washroom Monitoring System** built using the **ESP8266 (NodeMCU)**.  
+The system monitors **washroom occupancy, detects water leakage, measures water flow, and automatically controls a motor or valve**.
 
-The system detects:
-- 💧 Water leakage
-- 🚶 Human presence (motion detection)
+By combining multiple sensors, the system can intelligently determine whether water usage is **normal or abnormal**. When suspicious conditions such as **water leakage without human presence** occur, the system sends **real-time alerts using the Pushbullet API**.
 
-When water leakage is detected, the system checks whether a person is inside the restroom and sends a Push Notification using the Pushbullet API.
-
----
-
-## 🛠️ Hardware Components
-
-- ESP8266 (NodeMCU)
-- PIR Motion Sensor
-- Rain/Water Sensor Module
-- Jumper Wires
-- Power Supply
+This solution helps reduce **water wastage, detect leaks early, and automate water usage in restrooms**.
 
 ---
 
-## 🔌 Pin Configuration
+# ⚙️ Features
 
-| Component      | ESP8266 Pin |
-|---------------|------------|
-| PIR Sensor    | D5         |
-| Rain Sensor   | D6         |
-
----
-
-## 🌐 How It Works
-
-1. ESP8266 connects to WiFi.
-2. Continuously monitors:
-   - Rain sensor (Water leakage detection)
-   - PIR sensor (Motion detection)
-3. If water is detected:
-   - If motion is detected → Sends alert (Person inside restroom)
-   - If no motion → Sends critical leakage alert
-4. Sends push notification via Pushbullet API over HTTPS.
+- 🚶 Human presence detection using **PIR Motion Sensor**
+- 💧 Water leakage detection using **Rain/Water Sensor**
+- 🌊 Real-time water flow monitoring using **Flow Sensor**
+- ⚡ Automatic **motor/valve control**
+- 📲 **Push notifications** using Pushbullet API
+- ⏱ Smart **motion timeout system**
+- 🌐 WiFi-based IoT monitoring
 
 ---
 
-## 📲 Push Notification Service
+# 🧠 System Working
 
-This project uses:
-- Pushbullet REST API
-- Secure HTTPS communication (`WiFiClientSecure`)
-- JSON-based HTTP POST request
+## 1️⃣ WiFi Connection
+When powered on, the ESP8266 connects to a WiFi network using the configured **SSID and password**.
 
----
-
-## 💻 Software Requirements
-
-- Arduino IDE
-- ESP8266 Board Package installed
-- Required Libraries:
-  - ESP8266WiFi.h
-  - ESP8266HTTPClient.h
-  - WiFiClientSecure.h
+Once connected, it can send **alerts through the internet** using Pushbullet.
 
 ---
 
-## 🚀 Installation Steps
+## 2️⃣ Motion Detection (Occupancy Monitoring)
 
-1. Install Arduino IDE.
-2. Add ESP8266 board manager URL:
+A **PIR motion sensor** connected to **D5** detects human movement inside the washroom.
 
-   http://arduino.esp8266.com/stable/package_esp8266com_index.json
+- When motion is detected:
+  - The system records the current time using `millis()`
+  - The **motor or valve connected to D1 turns ON**
 
-3. Go to:
-   Tools → Board → Board Manager → Install ESP8266
-4. Select Board:
-   NodeMCU 1.0 (ESP-12E Module)
-5. Update the following in the code:
-   - WiFi SSID
-   - WiFi Password
-   - Pushbullet Access Token
-6. Upload the code to ESP8266.
-7. Open Serial Monitor (9600 baud rate).
+- When no motion is detected:
+  - The system waits **5 seconds**
+  - If no movement occurs, the **motor automatically turns OFF**
+
+This prevents sudden shutdown caused by temporary PIR signal drops.
 
 ---
 
-## 🔐 Security Note
+## 3️⃣ Water Leakage Detection
 
-⚠️ Do NOT upload your real Pushbullet Access Token to GitHub.
+A **rain/water sensor** connected to **D6** detects water on the floor.
 
-Instead, use:
+When water is detected, the system checks occupancy:
+
+| Condition | System Action |
+|-----------|--------------|
+| Water + Motion detected | Sends **"All Good"** notification |
+| Water detected + No motion | Sends **Leakage Warning Alert** |
+
+---
+
+## 4️⃣ Water Flow Monitoring
+
+A **water flow sensor** connected to **D2** measures water usage.
+
+The sensor produces pulses whenever water flows.
+
+An **interrupt function** counts these pulses:
 
 ```cpp
-const char* pushToken = "YOUR_PUSHBULLET_TOKEN";
+void flowPulse() {
+  pulseCount++;
+}
